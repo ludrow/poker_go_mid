@@ -10,7 +10,6 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/mitchellh/mapstructure"
 )
 
 type User struct {
@@ -26,6 +25,13 @@ type Exception struct {
 	Message string `json:"message"`
 }
 
+type Room struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+var rooms []Room
+
 func CreateTokenEndpoint(w http.ResponseWriter, req *http.Request) {
 	var user User
 	_ = json.NewDecoder(req.Body).Decode(&user)
@@ -40,23 +46,6 @@ func CreateTokenEndpoint(w http.ResponseWriter, req *http.Request) {
 		fmt.Println(error)
 	}
 	json.NewEncoder(w).Encode(JwtToken{Token: tokenString})
-}
-
-func ProtectedEndpoint(w http.ResponseWriter, req *http.Request) {
-	params := req.URL.Query()
-	token, _ := jwt.Parse(params["token"][0], func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("There was an error")
-		}
-		return []byte("secret"), nil
-	})
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		var user User
-		mapstructure.Decode(claims, &user)
-		json.NewEncoder(w).Encode(user)
-	} else {
-		json.NewEncoder(w).Encode(Exception{Message: "Invalid authorization token"})
-	}
 }
 
 func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -88,11 +77,20 @@ func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
+// GetRooms get the rooms and send it as JSON
+func GetRooms(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(rooms)
+}
+
 func main() {
 	router := mux.NewRouter()
 	fmt.Println("starting the application...")
+	//temporary def rooms here
+	rooms = append(rooms, Room{ID: "1", Name: "first room"})
+	rooms = append(rooms, Room{ID: "2", Name: "2nd room"})
+
 	router.HandleFunc("/authenticate", CreateTokenEndpoint).Methods("POST")
-	router.HandleFunc("/protected", ProtectedEndpoint).Methods("GET")
 	router.HandleFunc("/test", ValidateMiddleware(TestEndpoint)).Methods("GET")
-	log.Fatal(http.ListenAndServe(":1234", router))
+	router.HandleFunc("/room", ValidateMiddleware(GetRooms)).Methods("GET")
+	log.Fatal(http.ListenAndServe(":8000", router))
 }
