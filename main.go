@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	fmt.Println("hello world")
 	r := mux.NewRouter()
 	port := os.Getenv("PORT")
 	if port == "" {
