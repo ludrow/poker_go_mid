@@ -5,5 +5,5 @@ mid layer in golang for web poker game.
 
 ### routes
 - `/status` GET() - get the status of application
-- `/room` GET() - get the avaliable rooms
-- `/room/{id}` GET() - get specific room details
+- `/table` GET() - get the avaliable rooms
+- `/table/{id}` GET() - get specific room details

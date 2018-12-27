@@ -48,6 +48,7 @@ func CreateTokenEndpoint(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(JwtToken{Token: tokenString})
 }
 
+// ValidateMiddleware validate user token
 func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		authorizationHeader := req.Header.Get("authorization")
